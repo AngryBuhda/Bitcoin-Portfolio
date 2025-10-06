@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bitcoin Portfolio Calculator</title>
+    <style>
+        body { 
+            margin: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .calculator { 
+            max-width: 800px; 
+            margin: 20px auto; 
+            padding: 30px; 
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .input-group { 
+            margin: 15px 0; 
+        }
+        .input-group label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600;
+            color: #333;
+        }
+        .input-group input, 
+        .input-group select { 
+            width: 100%; 
+            padding: 12px; 
+            font-size: 16px; 
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        .checkbox-group label {
+            margin: 0;
+            font-weight: 500;
+        }
+        .calculate-btn { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            padding: 15px 40px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 18px; 
+            font-weight: 600;
+            margin: 20px auto;
+            display: block;
+            transition: transform 0.2s;
+        }
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+        }
+        .results { 
+            margin-top: 40px; 
+        }
+        .results h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .portfolio-card { 
+            border: 2px solid #e1e5e9;
+            padding: 25px; 
+            margin: 20px 0; 
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+        .portfolio-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .portfolio-card h3 { 
+            color: #333; 
+            margin-top: 0;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .rank-badge {
+            font-size: 2em;
+        }
+        .allocation-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+            gap: 15px; 
+            margin: 20px 0; 
+        }
+        .allocation-item { 
+            text-align: center; 
+            padding: 15px; 
+            background: #f8f9fa; 
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+        }
+        .allocation-item strong {
+            color: #333;
+            font-size: 1.1em;
+        }
+        .metrics { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 20px; 
+            margin: 25px 0; 
+        }
+        .metric { 
+            text-align: center; 
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .metric-value { 
+            font-size: 24px; 
+            font-weight: bold; 
+            color: #667eea; 
+        }
+        .metric-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .status-indicator {
+            margin-top: 5px;
+            font-size: 1.2em;
+        }
+        .feasible { 
+            border-color: #28a745; 
+            background-color: #f8fff9; 
+        }
+        .not-feasible { 
+            border-color: #dc3545; 
+            background-color: #fff5f5; 
+        }
+        .warning-card {
+            border: 2px solid #ffc107;
+            background-color: #fff9e6;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .implementation-steps {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .implementation-steps h4 {
+            margin-top: 0;
+            color: #333;
+        }
+        .implementation-steps ol {
+            margin: 10px 0 0 20px;
+            line-height: 1.6;
+        }
+        .projection-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .projection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .projection-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+        }
+        .projection-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .comparison-highlight {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #2196f3;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1>🚀 Bitcoin Portfolio Calculator</h1>
+        <p class="subtitle">Find the optimal portfolio composition for your financial goals</p>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <label>💰 Starting Capital ($)</label>
+                <input type="number" id="startingCapital" placeholder="25000" value="25000">
+            </div>
+            
+            <div class="input-group">
+                <label>📊 Maximum Drawdown Tolerance</label>
+                <select id="maxDrawdown">
+                    <option value="15">15% (Ultra Conservative)</option>
+                    <option value="20">20% (Conservative)</option>
+                    <option value="25">25% (Moderate Conservative)</option>
+                    <option value="35" selected>35% (Balanced)</option>
+                    <option value="50">50% (Moderate Aggressive)</option>
+                    <option value="65">65% (Aggressive)</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>🎯 Target Monthly Dividend Income ($)</label>
+                <input type="number" id="targetIncome" placeholder="500" value="500">
+            </div>
+            
+            <div class="input-group">
+                <label>📈 Monthly Contribution Amount ($)</label>
+                <input type="number" id="monthlyContribution" placeholder="1000" value="1000">
+            </div>
+            
+            <div class="input-group">
+                <label>⏰ Investment Time Horizon</label>
+                <select id="timeHorizon">
+                    <option value="1">1 year</option>
+                    <option value="3">3 years</option>
+                    <option value="5" selected>5 years</option>
+                    <option value="10">10 years</option>
+                    <option value="20">20+ years</option>
+                </select>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="reinvestDividends" checked>
+                <label for="reinvestDividends">🔄 Automatically reinvest all dividends (Recommended)</label>
+            </div>
+        </div>
+        
+        <button class="calculate-btn" onclick="calculatePortfolios()">🔍 Find Best Portfolios</button>
+        
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        // Asset database from generated analysis
+        const assets = {
+            'IBIT': { yield: 0.00, expectedReturn: 0.18, volatility: 0.78, risk: 4, name: 'iShares Bitcoin ETF' },
+            'MSTR': { yield: 0.00, expectedReturn: 0.22, volatility: 0.90, risk: 5, name: 'MicroStrategy' },
+            'STRF': { yield: 0.10, expectedReturn: 0.13, volatility: 0.12, risk: 2, name: 'Strategy Senior Preferred' },
+            'STRK': { yield: 0.08, expectedReturn: 0.19, volatility: 0.38, risk: 3, name: 'Strategy Convertible Preferred' },
+            'STRD': { yield: 0.10, expectedReturn: 0.15, volatility: 0.18, risk: 3, name: 'Strategy High-Yield Preferred' },
+            'STRC': { yield: 0.1025, expectedReturn: 0.1025, volatility: 0.06, risk: 1, name: 'Strategy Variable Rate Preferred' }
+        };
+
+        // Pre-generated portfolio compositions
+        const portfolioTemplates = [
+            { 
+                id: 'ultra_cons', 
+                name: 'Ultra Conservative',
+                maxDrawdown: 0.15, 
+                allocations: { STRC: 55, STRF: 25, IBIT: 10, STRK: 5, MSTR: 3, STRD: 2 }
+            },
+            { 
+                id: 'conservative', 
+                name: 'Conservative',
+                maxDrawdown: 0.20, 
+                allocations: { STRC: 40, STRF: 30, IBIT: 20, STRK: 5, MSTR: 5, STRD: 0 }
+            },
+            { 
+                id: 'mod_cons', 
+                name: 'Moderate Conservative',
+                maxDrawdown: 0.25, 
+                allocations: { STRC: 35, STRF: 25, IBIT: 20, STRK: 10, MSTR: 7, STRD: 3 }
+            },
+            { 
+                id: 'balanced', 
+                name: 'Balanced',
+                maxDrawdown: 0.35, 
+                allocations: { STRC: 25, STRF: 20, IBIT: 25, STRK: 15, MSTR: 10, STRD: 5 }
+            },
+            { 
+                id: 'mod_agg', 
+                name: 'Moderate Aggressive',
+                maxDrawdown: 0.50, 
+                allocations: { STRC: 15, STRF: 15, IBIT: 30, STRK: 20, MSTR: 15, STRD: 5 }
+            },
+            { 
+                id: 'aggressive', 
+                name: 'Aggressive',
+                maxDrawdown: 0.65, 
+                allocations: { STRC: 5, STRF: 10, IBIT: 30, STRK: 20, MSTR: 30, STRD: 5 }
+            }
+        ];
+
+        // Calculate portfolio metrics including projections
+        function calculatePortfolioMetrics(portfolio, startingCapital, monthlyContribution, timeHorizon, reinvestDividends) {
+            let totalYield = 0;
+            let weightedReturn = 0;
+            let weightedVolatility = 0;
+            
+            // Calculate weighted averages
+            for (const [asset, percentage] of Object.entries(portfolio.allocations)) {
+                const weight = percentage / 100;
+                totalYield += assets[asset].yield * weight;
+                weightedReturn += assets[asset].expectedReturn * weight;
+                weightedVolatility += assets[asset].volatility * weight;
+            }
+            
+            // Calculate immediate dividend income
+            const annualDividend = startingCapital * totalYield;
+            const monthlyDividend = annualDividend / 12;
+            
+            // Project future values
+            const projections = calculateFutureValue(
+                startingCapital, 
+                monthlyContribution, 
+                weightedReturn, 
+                totalYield,
+                timeHorizon, 
+                reinvestDividends
+            );
+            
+            return {
+                ...portfolio,
+                effectiveYield: totalYield,
+                expectedReturn: weightedReturn,
+                estimatedVolatility: weightedVolatility,
+                initialAnnualDividend: annualDividend,
+                initialMonthlyDividend: monthlyDividend,
+                ...projections
+            };
+        }
+
+        // Calculate future value with compound growth and contributions
+        function calculateFutureValue(startingCapital, monthlyContribution, expectedReturn, dividendYield, years, reinvestDividends) {
+            let portfolioValue = startingCapital;
+            let totalDividendsReceived = 0;
+            let totalContributions = startingCapital;
+            
+            for (let year = 1; year <= years; year++) {
+                // Add monthly contributions throughout the year
+                const yearlyContributions = monthlyContribution * 12;
+                portfolioValue += yearlyContributions;
+                totalContributions += yearlyContributions;
+                
+                // Calculate annual dividends on current portfolio value
+                const annualDividends = portfolioValue * dividendYield;
+                totalDividendsReceived += annualDividends;
+                
+                // Reinvest dividends if selected
+                if (reinvestDividends) {
+                    portfolioValue += annualDividends;
+                } else {
+                    // If not reinvesting, dividends are taken as cash
+                    // They don't contribute to future growth
+                }
+                
+                // Apply capital appreciation (excluding dividend yield to avoid double counting)
+                const capitalAppreciation = expectedReturn - dividendYield;
+                portfolioValue *= (1 + capitalAppreciation);
+            }
+            
+            // Calculate final year dividend income
+            const finalYearDividends = portfolioValue * dividendYield;
+            const finalMonthlyDividends = finalYearDividends / 12;
+            
+            return {
+                finalPortfolioValue: portfolioValue,
+                totalDividendsReceived: totalDividendsReceived,
+                totalContributions: totalContributions,
+                finalAnnualDividends: finalYearDividends,
+                finalMonthlyDividends: finalMonthlyDividends,
+                totalGrowth: portfolioValue - totalContributions + (reinvestDividends ? 0 : totalDividendsReceived)
+            };
+        }
+
+        // Check if portfolio meets user criteria
+        function meetsUserCriteria(portfolio, userInputs) {
+            const criteria = {
+                maxDrawdownOk: portfolio.maxDrawdown <= (userInputs.maxDrawdown / 100),
+                initialDividendGoalMet: portfolio.initialMonthlyDividend >= userInputs.targetIncome,
+                futureDividendGoalMet: portfolio.finalMonthlyDividends >= userInputs.targetIncome
+            };
+            
+            criteria.overallFeasible = criteria.maxDrawdownOk && (criteria.initialDividendGoalMet || criteria.futureDividendGoalMet);
+            
+            return criteria;
+        }
+
+        // Scoring algorithm
+        function calculatePortfolioScore(portfolio, userInputs) {
+            let score = 0;
+            
+            // Reward meeting dividend goal (0-50 points)
+            if (portfolio.finalMonthlyDividends >= userInputs.targetIncome) {
+                score += 50;
+            } else if (portfolio.initialMonthlyDividend >= userInputs.targetIncome) {
+                score += 40;
+            } else {
+                // Partial credit based on how close we get
+                const bestDividend = Math.max(portfolio.initialMonthlyDividend, portfolio.finalMonthlyDividends);
+                score += (bestDividend / userInputs.targetIncome) * 35;
+            }
+            
+            // Reward appropriate risk level (0-30 points)
+            const riskDiff = Math.abs(portfolio.maxDrawdown - (userInputs.maxDrawdown / 100));
+            score += Math.max(0, 30 - (riskDiff * 100));
+            
+            // Reward higher expected returns (0-20 points)
+            score += Math.min(20, portfolio.expectedReturn * 80);
+            
+            return score;
+        }
+
+        // Calculate capital needed for dividend goal
+        function calculateCapitalNeeded(targetMonthlyIncome, maxDrawdown) {
+            const suitablePortfolios = portfolioTemplates
+                .filter(p => p.maxDrawdown <= maxDrawdown / 100)
+                .map(p => {
+                    let totalYield = 0;
+                    for (const [asset, percentage] of Object.entries(p.allocations)) {
+                        totalYield += assets[asset].yield * (percentage / 100);
+                    }
+                    return { ...p, effectiveYield: totalYield };
+                });
+            
+            if (suitablePortfolios.length === 0) return null;
+            
+            const highestYield = Math.max(...suitablePortfolios.map(p => p.effectiveYield));
+            return (targetMonthlyIncome * 12) / highestYield;
+        }
+
+        // Main calculation function
+        function calculatePortfolios() {
+            const userInputs = {
+                startingCapital: parseFloat(document.getElementById('startingCapital').value) || 0,
+                maxDrawdown: parseFloat(document.getElementById('maxDrawdown').value),
+                targetIncome: parseFloat(document.getElementById('targetIncome').value) || 0,
+                monthlyContribution: parseFloat(document.getElementById('monthlyContribution').value) || 0,
+                timeHorizon: parseFloat(document.getElementById('timeHorizon').value),
+                reinvestDividends: document.getElementById('reinvestDividends').checked
+            };
+
+            // Validate inputs
+            if (userInputs.startingCapital <= 0) {
+                alert('Please enter a valid starting capital amount.');
+                return;
+            }
+
+            // Calculate metrics for all portfolios
+            const evaluatedPortfolios = portfolioTemplates.map(portfolio => {
+                const withMetrics = calculatePortfolioMetrics(
+                    portfolio, 
+                    userInputs.startingCapital,
+                    userInputs.monthlyContribution,
+                    userInputs.timeHorizon,
+                    userInputs.reinvestDividends
+                );
+                const criteria = meetsUserCriteria(withMetrics, userInputs);
+                
+                return {
+                    ...withMetrics,
+                    criteria: criteria,
+                    score: calculatePortfolioScore(withMetrics, userInputs)
+                };
+            });
+
+            // Sort by score and feasibility
+            const sortedPortfolios = evaluatedPortfolios.sort((a, b) => {
+                if (a.criteria.overallFeasible && !b.criteria.overallFeasible) return -1;
+                if (!a.criteria.overallFeasible && b.criteria.overallFeasible) return 1;
+                return b.score - a.score;
+            });
+
+            // Display results
+            displayResults(sortedPortfolios.slice(0, 3), userInputs);
+        }
+
+        // Display results function
+        function displayResults(portfolios, userInputs) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (portfolios.length === 0) {
+                resultsDiv.innerHTML = '<p>No suitable portfolios found for your criteria.</p>';
+                return;
+            }
+            
+            let html = '<h2>🎯 Top 3 Portfolio Recommendations</h2>';
+            
+            // Check if any portfolio meets dividend goal
+            const canMeetDividendGoal = portfolios.some(p => p.criteria.overallFeasible);
+            
+            if (!canMeetDividendGoal && userInputs.targetIncome > 0) {
+                const neededCapital = calculateCapitalNeeded(userInputs.targetIncome, userInputs.maxDrawdown);
+                if (neededCapital) {
+                    html += `
+                    <div class="warning-card">
+                        <h3>💡 Capital Requirement Analysis</h3>
+                        <p>To generate <strong>$${userInputs.targetIncome}/month</strong> in dividends immediately with your risk tolerance, 
+                        you would need approximately <strong>$${neededCapital.toLocaleString()}</strong> in starting capital.</p>
+                        <p><strong>Consider these options:</strong></p>
+                        <ul>
+                            <li>📈 Let your portfolio grow over ${userInputs.timeHorizon} years with $${userInputs.monthlyContribution}/month contributions</li>
+                            <li>🎯 Lower your monthly dividend target</li>
+                            <li>⚡ Accept higher risk tolerance for better yields</li>
+                            <li>💰 Increase your starting capital</li>
+                        </ul>
+                    </div>`;
+                }
+            }
+            
+            portfolios.forEach((portfolio, index) => {
+                const feasibilityClass = portfolio.criteria.overallFeasible ? 'feasible' : 'not-feasible';
+                const rankEmojis = ['🥇', '🥈', '🥉'];
+                
+                html += `
+                <div class="portfolio-card ${feasibilityClass}">
+                    <h3>
+                        ${portfolio.name}
+                        <span class="rank-badge">${rankEmojis[index]}</span>
+                    </h3>
+                    
+                    <div class="metrics">
+                        <div class="metric">
+                            <div class="metric-value">$${portfolio.initialMonthlyDividend.toFixed(0)}</div>
+                            <div class="metric-label">Initial Monthly Dividends</div>
+                            <div class="status-indicator">${portfolio.initialMonthlyDividend >= userInputs.targetIncome ? '✅' : '❌'} Target: $${userInputs.targetIncome}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${(portfolio.maxDrawdown * 100).toFixed(0)}%</div>
+                            <div class="metric-label">Max Drawdown Risk</div>
+                            <div class="status-indicator">${portfolio.maxDrawdown <= (userInputs.maxDrawdown / 100) ? '✅' : '❌'} Limit: ${userInputs.maxDrawdown}%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${(portfolio.expectedReturn * 100).toFixed(1)}%</div>
+                            <div class="metric-label">Expected Annual Return</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${(portfolio.effectiveYield * 100).toFixed(2)}%</div>
+                            <div class="metric-label">Portfolio Dividend Yield</div>
+                        </div>
+                    </div>
+                    
+                    <div class="projection-section">
+                        <h4>📊 ${userInputs.timeHorizon}-Year Projections</h4>
+                        <div class="projection-grid">
+                            <div class="projection-item">
+                                <div class="projection-value">$${portfolio.finalPortfolioValue.toLocaleString()}</div>
+                                <div>Final Portfolio Value</div>
+                            </div>
+                            <div class="projection-item">
+                                <div class="projection-value">$${portfolio.finalMonthlyDividends.toLocaleString()}</div>
+                                <div>Final Monthly Dividends</div>
+                            </div>
+                            <div class="projection-item">
+                                <div class="projection-value">$${portfolio.totalDividendsReceived.toLocaleString()}</div>
+                                <div>Total Dividends ${userInputs.reinvestDividends ? '(Reinvested)' : '(Cash)'}</div>
+                            </div>
+                            <div class="projection-item">
+                                <div class="projection-value">$${portfolio.totalGrowth.toLocaleString()}</div>
+                                <div>Total Growth</div>
+                            </div>
+                        </div>
+                        
+                        ${!userInputs.reinvestDividends ? `
+                        <div class="comparison-highlight">
+                            <strong>💰 Dividend Strategy Impact:</strong> You'll receive $${portfolio.totalDividendsReceived.toLocaleString()} 
+                            in cash dividends over ${userInputs.timeHorizon} years. If you reinvested these dividends instead, 
+                            your final portfolio value could be significantly higher due to compound growth.
+                        </div>` : ''}
+                    </div>
+                    
+                    <h4>🥧 Asset Allocation</h4>
+                    <div class="allocation-grid">
+                        ${Object.entries(portfolio.allocations)
+                            .filter(([asset, pct]) => pct > 0)
+                            .sort(([,a], [,b]) => b - a)
+                            .map(([asset, pct]) => `
+                                <div class="allocation-item">
+                                    <strong>${asset}</strong><br>
+                                    ${pct}%<br>
+                                    $${(userInputs.startingCapital * pct / 100).toLocaleString()}<br>
+                                    <small style="color: #666;">${assets[asset].name}</small>
+                                </div>
+                            `).join('')}
+                    </div>
+                    
+                    <div class="implementation-steps">
+                        <h4>🚀 Implementation Guide</h4>
+                        <p><strong>Step-by-step purchase order (largest positions first):</strong></p>
+                        <ol>
+                            ${Object.entries(portfolio.allocations)
+                                .filter(([asset, pct]) => pct > 0)
+                                .sort(([,a], [,b]) => b - a)
+                                .map(([asset, pct]) => 
+                                    `<li><strong>Buy ${asset}</strong>: $${(userInputs.startingCapital * pct / 100).toLocaleString()} (${pct}%) - ${assets[asset].name}</li>`
+                                ).join('')}
+                            <li><strong>Set up automatic dividend reinvestment</strong> ${userInputs.reinvestDividends ? '✅ (Selected)' : '❌ (Not selected)'}</li>
+                            ${userInputs.monthlyContribution > 0 ? `<li><strong>Set up automatic monthly contribution</strong> of $${userInputs.monthlyContribution.toLocaleString()}</li>` : ''}
+                            <li><strong>Review and rebalance quarterly</strong> if any asset drifts >10% from target allocation</li>
+                        </ol>
+                    </div>
+                    
+                    ${!portfolio.criteria.overallFeasible ? 
+                        `<div style="color: #dc3545; font-weight: bold; margin-top: 20px; padding: 15px; background: #fff5f5; border-radius: 8px;">
+                            ⚠️ This portfolio doesn't immediately meet your dividend goal, but could reach it over time with growth and contributions.
+                        </div>` : ''}
+                </div>`;
+            });
+            
+            // Add educational note
+            html += `
+            <div class="warning-card">
+                <h3>📚 Important Notes</h3>
+                <ul>
+                    <li><strong>Dividend Reinvestment:</strong> ${userInputs.reinvestDividends ? 'Automatically reinvesting dividends accelerates compound growth.' : 'Taking dividends as cash provides immediate income but reduces long-term growth.'}</li>
+                    <li><strong>Monthly Contributions:</strong> ${userInputs.monthlyContribution > 0 ? `Your $${userInputs.monthlyContribution}/month contributions significantly boost long-term results.` : 'Consider adding monthly contributions to accelerate portfolio growth.'}</li>
+                    <li><strong>Risk Management:</strong> All portfolios include multiple asset types to balance growth potential with income generation.</li>
+                    <li><strong>Rebalancing:</strong> Review your portfolio quarterly and rebalance when allocations drift more than 10% from targets.</li>
+                </ul>
+            </div>`;
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // Initialize calculator when page loads
+        window.onload = function() {
+            // Set reasonable defaults
+            document.getElementById('startingCapital').value = '25000';
+            document.getElementById('monthlyContribution').value = '1000';
+            document.getElementById('targetIncome').value = '500';
+        };
+    </script>
+</body>
+</html>
