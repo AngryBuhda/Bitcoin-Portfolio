@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bitcoin Portfolio Calculator</title>
+    <style>
+        body { 
+            margin: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .calculator { 
+            max-width: 900px; 
+            margin: 20px auto; 
+            padding: 30px; 
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .input-column {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .input-group { 
+            margin: 0;
+        }
+        .input-group label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600;
+            color: #333;
+        }
+        .slider-container {
+            margin: 0;
+        }
+        .slider-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        .slider-wrapper {
+            position: relative;
+            margin: 10px 0;
+        }
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .strategy-slider {
+            background: linear-gradient(to right, #28a745 0%, #ffc107 50%, #dc3545 100%);
+        }
+        .drawdown-slider {
+            background: linear-gradient(to right, #28a745 0%, #ffc107 30%, #ff6b6b 60%, #dc3545 100%);
+        }
+        .income-slider {
+            background: linear-gradient(to right, #007bff 0%, #17a2b8 100%);
+        }
+        .contribution-slider {
+            background: linear-gradient(to right, #6c757d 0%, #28a745 100%);
+        }
+        .time-slider {
+            background: linear-gradient(to right, #ffc107 0%, #28a745 100%);
+        }
+        .capital-slider {
+            background: linear-gradient(to right, #6f42c1 0%, #007bff 100%);
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+        .slider-value {
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 5px;
+            font-size: 16px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            justify-content: center;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        .checkbox-group label {
+            margin: 0;
+            font-weight: 500;
+            font-size: 16px;
+        }
+        .calculate-btn { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            padding: 15px 40px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 18px; 
+            font-weight: 600;
+            margin: 20px auto;
+            display: block;
+            transition: transform 0.2s;
+        }
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+        }
+        .results { 
+            margin-top: 40px; 
+        }
+        .results h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .portfolio-card { 
+            border: 2px solid #e1e5e9;
+            padding: 25px; 
+            margin: 20px 0; 
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+        .portfolio-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .portfolio-card h3 { 
+            color: #333; 
+            margin-top: 0;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .rank-badge {
+            font-size: 2em;
+        }
+        .allocation-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+            gap: 15px; 
+            margin: 20px 0; 
+        }
+        .allocation-item { 
+            text-align: center; 
+            padding: 15px; 
+            background: #f8f9fa; 
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+        }
+        .allocation-item strong {
+            color: #333;
+            font-size: 1.1em;
+        }
+        .high-allocation {
+            border: 2px solid #ff6b6b;
+            background: #fff5f5;
+        }
+        .metrics { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
+            gap: 20px; 
+            margin: 25px 0; 
+        }
+        .metric { 
+            text-align: center; 
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .metric-value { 
+            font-size: 24px; 
+            font-weight: bold; 
+            color: #667eea; 
+        }
+        .metric-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .status-indicator {
+            margin-top: 5px;
+            font-size: 1.2em;
+        }
+        .feasible { 
+            border-color: #28a745; 
+            background-color: #f8fff9; 
+        }
+        .not-feasible { 
+            border-color: #dc3545; 
+            background-color: #fff5f5; 
+        }
+        .warning-card {
+            border: 2px solid #ffc107;
+            background-color: #fff9e6;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .implementation-steps {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .implementation-steps h4 {
+            margin-top: 0;
+            color: #333;
+        }
+        .implementation-steps ol {
+            margin: 10px 0 0 20px;
+            line-height: 1.6;
+        }
+        .projection-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .scenario-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+        }
+        .scenario-conservative {
+            border-left: 4px solid #dc3545;
+        }
+        .scenario-expected {
+            border-left: 4px solid #28a745;
+        }
+        .scenario-optimistic {
+            border-left: 4px solid #007bff;
+        }
+        .scenario-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .scenario-conservative .scenario-value { color: #dc3545; }
+        .scenario-expected .scenario-value { color: #28a745; }
+        .scenario-optimistic .scenario-value { color: #007bff; }
+        .comparison-highlight {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .strategy-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .dividend-focused {
+            background: #28a745;
+            color: white;
+        }
+        .growth-focused {
+            background: #dc3545;
+            color: white;
+        }
+        .balanced-focus {
+            background: #ffc107;
+            color: #333;
+        }
+        .concentration-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        @media (max-width: 768px) {
+            .input-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .calculator {
+                margin: 10px;
+                padding: 20px;
+            }
+            .scenario-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1>🚀 Bitcoin Portfolio Calculator</h1>
+        <p class="subtitle">Find the optimal portfolio composition for your financial goals</p>
+        
+        <div class="input-section">
+            <div class="input-column">
+                <div class="slider-container">
+                    <label>💰 Starting Capital</label>
+                    <div class="slider-wrapper">
+                        <input type="range" id="startingCapital" class="slider capital-slider" min="5000" max="500000" step="5000" value="25000" oninput="updateSliderValue('capital')">
+                        <div class="slider-labels">
+                            <span>$5,000</span>
+                            <span>$500,000</span>
+                        </div>
+                        <div class="slider-value" id="capitalValue">$25,000</div>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <label>📊 Maximum Drawdown Tolerance</label>
+                    <div class="slider-wrapper">
+                        <input type="range" id="maxDrawdown" class="slider drawdown-slider" min="5" max="80" step="1" value="35" oninput="updateSliderValue('drawdown')">
+                        <div class="slider-labels">
+                            <span>5% (Ultra Safe)</span>
+                            <span>80% (Maximum Risk)</span>
+                        </div>
+                        <div class="slider-value" id="drawdownValue">35% (Balanced)</div>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <label>🎯 Target Monthly Dividend Income</label>
+                    <div class="slider-wrapper">
+                        <input type="range" id="targetIncome" class="slider income-slider" min="0" max="5000" step="50" value="500" oninput="updateSliderValue('income')">
+                        <div class="slider-labels">
+                            <span>$0</span>
+                            <span>$5,000</span>
+                        </div>
+                        <div class="slider-value" id="incomeValue">$500</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-column">
+                <div class="slider-container">
+                    <label>📈 Monthly Contribution Amount</label>
+                    <div class="slider-wrapper">
+                        <input type="range" id="monthlyContribution" class="slider contribution-slider" min="0" max="10000" step="100" value="1000" oninput="updateSliderValue('contribution')">
+                        <div class="slider-labels">
+                            <span>$0</span>
+                            <span>$10,000</span>
+                        </div>
+                        <div class="slider-value" id="contributionValue">$1,000</div>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <label>⏰ Investment Time Horizon</label>
+                    <div class="slider-wrapper">
+                        <input type="range" id="timeHorizon" class="slider time-slider" min="1" max="30" step="1" value="5" oninput="updateSliderValue('time')">
+                        <div class="slider-labels">
+                            <span>1 year</span>
+                            <span>30 years</span>
+                        </div>
+                        <div class="slider-value" id="timeValue">5 years</div>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <label>⚖️ Investment Strategy Preference</label>
+                    <div class="slider-wrapper">
+                        <input type="range" id="strategyBias" class="slider strategy-slider" min="1" max="10" value="5" oninput="updateSliderValue('strategy')">
+                        <div class="slider-labels">
+                            <span>🏦 Dividend Focused</span>
+                            <span>🚀 Growth Focused</span>
+                        </div>
+                        <div class="slider-value" id="strategyValue">Balanced Approach</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="checkbox-group">
+            <input type="checkbox" id="reinvestDividends" checked>
+            <label for="reinvestDividends">🔄 Automatically reinvest all dividends (Recommended for compound growth)</label>
+        </div>
+        
+        <button class="calculate-btn" onclick="calculatePortfolios()">🔍 Find Best Portfolios</button>
+        
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        const assets = {
+            'IBIT': { yield: 0.00, expectedReturn: 0.18, volatility: 0.65, risk: 4, name: 'iShares Bitcoin ETF', type: 'growth' },
+            'MSTR': { yield: 0.00, expectedReturn: 0.22, volatility: 0.75, risk: 5, name: 'MicroStrategy', type: 'growth' },
+            'STRF': { yield: 0.10, expectedReturn: 0.13, volatility: 0.12, risk: 2, name: 'Strategy Senior Preferred', type: 'income' },
+            'STRK': { yield: 0.08, expectedReturn: 0.19, volatility: 0.38, risk: 3, name: 'Strategy Convertible Preferred', type: 'hybrid' },
+            'STRD': { yield: 0.10, expectedReturn: 0.15, volatility: 0.18, risk: 3, name: 'Strategy High-Yield Preferred', type: 'income' },
+            'STRC': { yield: 0.1025, expectedReturn: 0.1025, volatility: 0.06, risk: 1, name: 'Strategy Variable Rate Preferred', type: 'income' }
+        };
+
+        // Enhanced portfolio templates
+        const portfolioTemplates = [
+            // Ultra High Dividend Focus
+            { 
+                id: 'dividend_maximum', 
+                name: 'Maximum Dividend Focus',
+                maxDrawdown: 0.08, 
+                strategyBias: 1,
+                allocations: { STRC: 80, STRF: 15, STRD: 5, STRK: 0, IBIT: 0, MSTR: 0 }
+            },
+            { 
+                id: 'dividend_ultra', 
+                name: 'Ultra Dividend Focus',
+                maxDrawdown: 0.12, 
+                strategyBias: 2,
+                allocations: { STRC: 65, STRF: 25, STRD: 5, STRK: 3, IBIT: 2, MSTR: 0 }
+            },
+            { 
+                id: 'dividend_heavy', 
+                name: 'High Dividend Focus',
+                maxDrawdown: 0.18, 
+                strategyBias: 3,
+                allocations: { STRC: 50, STRF: 30, STRD: 10, STRK: 5, IBIT: 5, MSTR: 0 }
+            },
+            
+            // Balanced Range
+            { 
+                id: 'conservative', 
+                name: 'Conservative Balanced',
+                maxDrawdown: 0.20, 
+                strategyBias: 4,
+                allocations: { STRC: 40, STRF: 30, IBIT: 20, STRK: 5, MSTR: 5, STRD: 0 }
+            },
+            { 
+                id: 'balanced', 
+                name: 'True Balanced',
+                maxDrawdown: 0.35, 
+                strategyBias: 5,
+                allocations: { STRC: 25, STRF: 20, IBIT: 25, STRK: 15, MSTR: 10, STRD: 5 }
+            },
+            { 
+                id: 'mod_agg', 
+                name: 'Moderate Growth Focus',
+                maxDrawdown: 0.50, 
+                strategyBias: 6,
+                allocations: { STRC: 15, STRF: 15, IBIT: 30, STRK: 20, MSTR: 15, STRD: 5 }
+            },
+            
+            // High Growth Focus Range
+            { 
+                id: 'growth_moderate', 
+                name: 'Moderate Growth Focus',
+                maxDrawdown: 0.55, 
+                strategyBias: 7,
+                allocations: { STRC: 10, STRF: 10, IBIT: 35, STRK: 20, MSTR: 20, STRD: 5 }
+            },
+            { 
+                id: 'growth_heavy', 
+                name: 'High Growth Focus',
+                maxDrawdown: 0.65, 
+                strategyBias: 8,
+                allocations: { STRC: 5, STRF: 5, IBIT: 40, STRK: 15, MSTR: 30, STRD: 5 }
+            },
+            { 
+                id: 'growth_aggressive', 
+                name: 'Aggressive Growth Focus',
+                maxDrawdown: 0.75, 
+                strategyBias: 9,
+                allocations: { STRC: 5, STRF: 0, IBIT: 45, STRK: 10, MSTR: 35, STRD: 5 }
+            },
+            
+            // Maximum Growth/Risk - High Concentration
+            { 
+                id: 'mstr_concentrated', 
+                name: 'MSTR Concentrated Growth',
+                maxDrawdown: 0.80, 
+                strategyBias: 10,
+                allocations: { STRC: 0, STRF: 0, IBIT: 25, STRK: 5, MSTR: 65, STRD: 5 }
+            },
+            { 
+                id: 'ibit_concentrated', 
+                name: 'IBIT Concentrated Growth',
+                maxDrawdown: 0.75, 
+                strategyBias: 10,
+                allocations: { STRC: 0, STRF: 5, IBIT: 70, STRK: 10, MSTR: 10, STRD: 5 }
+            },
+            { 
+                id: 'bitcoin_maximum', 
+                name: 'Maximum Bitcoin Exposure',
+                maxDrawdown: 0.80, 
+                strategyBias: 10,
+                allocations: { STRC: 0, STRF: 0, IBIT: 40, STRK: 5, MSTR: 50, STRD: 5 }
+            }
+        ];
+
+        // Update all slider displays
+        function updateSliderValue(type) {
+            if (type === 'capital') {
+                const value = parseInt(document.getElementById('startingCapital').value);
+                document.getElementById('capitalValue').textContent = '$' + value.toLocaleString();
+            } else if (type === 'drawdown') {
+                const value = parseInt(document.getElementById('maxDrawdown').value);
+                let label = '';
+                if (value <= 10) label = '(Ultra Safe)';
+                else if (value <= 20) label = '(Conservative)';
+                else if (value <= 35) label = '(Balanced)';
+                else if (value <= 50) label = '(Aggressive)';
+                else if (value <= 65) label = '(High Risk)';
+                else label = '(Maximum Risk)';
+                
+                document.getElementById('drawdownValue').textContent = value + '% ' + label;
+            } else if (type === 'income') {
+                const value = parseInt(document.getElementById('targetIncome').value);
+                document.getElementById('incomeValue').textContent = '$' + value.toLocaleString();
+            } else if (type === 'contribution') {
+                const value = parseInt(document.getElementById('monthlyContribution').value);
+                document.getElementById('contributionValue').textContent = '$' + value.toLocaleString();
+            } else if (type === 'time') {
+                const value = parseInt(document.getElementById('timeHorizon').value);
+                const label = value === 1 ? '1 year' : value + ' years';
+                document.getElementById('timeValue').textContent = label;
+            } else if (type === 'strategy') {
+                const value = parseInt(document.getElementById('strategyBias').value);
+                const labels = {
+                    1: 'Maximum Dividend Focus 🏦',
+                    2: 'High Dividend Focus 💰',
+                    3: 'Moderate Dividend Focus 📊',
+                    4: 'Slight Dividend Preference ⚖️',
+                    5: 'Balanced Approach ⚖️',
+                    6: 'Slight Growth Preference 📈',
+                    7: 'Moderate Growth Focus 🚀',
+                    8: 'High Growth Focus 🎯',
+                    9: 'Aggressive Growth Focus ⚡',
+                    10: 'Maximum Growth Focus 🔥'
+                };
+                
+                document.getElementById('strategyValue').textContent = labels[value] || 'Balanced Approach';
+            }
+        }
+
+        // Calculate portfolio metrics with proper volatility calculation
+        function calculatePortfolioMetrics(portfolio, startingCapital, monthlyContribution, timeHorizon, reinvestDividends) {
+            let totalYield = 0;
+            let weightedReturn = 0;
+            let maxAllocation = 0;
+            let maxAsset = '';
+            
+            // Calculate weighted averages for yield and return
+            for (const [asset, percentage] of Object.entries(portfolio.allocations)) {
+                const weight = percentage / 100;
+                totalYield += assets[asset].yield * weight;
+                weightedReturn += assets[asset].expectedReturn * weight;
+                
+                if (percentage > maxAllocation) {
+                    maxAllocation = percentage;
+                    maxAsset = asset;
+                }
+            }
+            
+            // Calculate immediate dividend income
+            const annualDividend = startingCapital * totalYield;
+            const monthlyDividend = annualDividend / 12;
+            
+            // Project scenarios (Conservative: -20%, Expected: base, Optimistic: +30%)
+            const scenarios = {
+                conservative: calculateFutureValue(
+                    startingCapital, monthlyContribution, weightedReturn * 0.8, totalYield, timeHorizon, reinvestDividends
+                ),
+                expected: calculateFutureValue(
+                    startingCapital, monthlyContribution, weightedReturn, totalYield, timeHorizon, reinvestDividends
+                ),
+                optimistic: calculateFutureValue(
+                    startingCapital, monthlyContribution, weightedReturn * 1.3, totalYield, timeHorizon, reinvestDividends
+                )
+            };
+            
+            return {
+                ...portfolio,
+                effectiveYield: totalYield,
+                expectedReturn: weightedReturn,
+                maxAllocation: maxAllocation,
+                maxAsset: maxAsset,
+                initialAnnualDividend: annualDividend,
+                initialMonthlyDividend: monthlyDividend,
+                scenarios: scenarios
+            };
+        }
+
+        // Calculate future value with compound growth
+        function calculateFutureValue(startingCapital, monthlyContribution, expectedReturn, dividendYield, years, reinvestDividends) {
+            let portfolioValue = startingCapital;
+            let totalDividendsReceived = 0;
+            let totalContributions = startingCapital;
+            
+            for (let year = 1; year <= years; year++) {
+                const yearlyContributions = monthlyContribution * 12;
+                portfolioValue += yearlyContributions;
+                totalContributions += yearlyContributions;
+                
+                const annualDividends = portfolioValue * dividendYield;
+                totalDividendsReceived += annualDividends;
+                
+                if (reinvestDividends) {
+                    portfolioValue += annualDividends;
+                }
+                
+                const capitalAppreciation = expectedReturn - dividendYield;
+                portfolioValue *= (1 + capitalAppreciation);
+            }
+            
+            const finalYearDividends = portfolioValue * dividendYield;
+            const finalMonthlyDividends = finalYearDividends / 12;
+            
+            return {
+                finalPortfolioValue: portfolioValue,
+                totalDividendsReceived: totalDividendsReceived,
+                totalContributions: totalContributions,
+                finalAnnualDividends: finalYearDividends,
+                finalMonthlyDividends: finalMonthlyDividends,
+                totalGrowth: portfolioValue - totalContributions + (reinvestDividends ? 0 : totalDividendsReceived)
+            };
+        }
+
+        // Check if portfolio meets criteria
+        function meetsUserCriteria(portfolio, userInputs) {
+            const criteria = {
+                maxDrawdownOk: portfolio.maxDrawdown <= (userInputs.maxDrawdown / 100),
+                initialDividendGoalMet: portfolio.initialMonthlyDividend >= userInputs.targetIncome,
+                futureDividendGoalMet: portfolio.scenarios.expected.finalMonthlyDividends >= userInputs.targetIncome,
+                strategyMatch: Math.abs(portfolio.strategyBias - userInputs.strategyBias) <= 2
+            };
+            
+            criteria.overallFeasible = criteria.maxDrawdownOk && (criteria.initialDividendGoalMet || criteria.futureDividendGoalMet);
+            
+            return criteria;
+        }
+
+        // Portfolio scoring
+        function calculatePortfolioScore(portfolio, userInputs) {
+            let score = 0;
+            
+            // Strategy bias alignment (0-40 points)
+            const biasDiff = Math.abs(portfolio.strategyBias - userInputs.strategyBias);
+            score += Math.max(0, 40 - (biasDiff * 8));
+            
+            // Dividend goal achievement (0-35 points)
+            if (portfolio.scenarios.expected.finalMonthlyDividends >= userInputs.targetIncome) {
+                score += 35;
+            } else if (portfolio.initialMonthlyDividend >= userInputs.targetIncome) {
+                score += 30;
+            } else {
+                const bestDividend = Math.max(portfolio.initialMonthlyDividend, portfolio.scenarios.expected.finalMonthlyDividends);
+                if (userInputs.targetIncome > 0) {
+                    score += (bestDividend / userInputs.targetIncome) * 25;
+                } else {
+                    score += 25; // No income requirement
+                }
+            }
+            
+            // Risk tolerance alignment (0-15 points)
+            const riskDiff = Math.abs(portfolio.maxDrawdown - (userInputs.maxDrawdown / 100));
+            score += Math.max(0, 15 - (riskDiff * 50));
+            
+            // Expected returns bonus (0-10 points)
+            score += Math.min(10, portfolio.expectedReturn * 40);
+            
+            return score;
+        }
+
+        // Get strategy badge
+        function getStrategyBadge(strategyBias) {
+            if (strategyBias <= 3) return '<span class="strategy-badge dividend-focused">Dividend Focused</span>';
+            if (strategyBias >= 7) return '<span class="strategy-badge growth-focused">Growth Focused</span>';
+            return '<span class="strategy-badge balanced-focus">Balanced</span>';
+        }
+
+        // Main calculation function
+        function calculatePortfolios() {
+            const userInputs = {
+                startingCapital: parseFloat(document.getElementById('startingCapital').value) || 0,
+                maxDrawdown: parseFloat(document.getElementById('maxDrawdown').value),
+                targetIncome: parseFloat(document.getElementById('targetIncome').value) || 0,
+                monthlyContribution: parseFloat(document.getElementById('monthlyContribution').value) || 0,
+                timeHorizon: parseFloat(document.getElementById('timeHorizon').value),
+                reinvestDividends: document.getElementById('reinvestDividends').checked,
+                strategyBias: parseInt(document.getElementById('strategyBias').value)
+            };
+
+            if (userInputs.startingCapital <= 0) {
+                alert('Please enter a valid starting capital amount.');
+                return;
+            }
+
+            const evaluatedPortfolios = portfolioTemplates.map(portfolio => {
+                const withMetrics = calculatePortfolioMetrics(
+                    portfolio, 
+                    userInputs.startingCapital,
+                    userInputs.monthlyContribution,
+                    userInputs.timeHorizon,
+                    userInputs.reinvestDividends
+                );
+                const criteria = meetsUserCriteria(withMetrics, userInputs);
+                
+                return {
+                    ...withMetrics,
+                    criteria: criteria,
+                    score: calculatePortfolioScore(withMetrics, userInputs)
+                };
+            });
+
+            // Sort portfolios by score and feasibility
+            const sortedPortfolios = evaluatedPortfolios.sort((a, b) => {
+                if (a.criteria.overallFeasible && !b.criteria.overallFeasible) return -1;
+                if (!a.criteria.overallFeasible && b.criteria.overallFeasible) return 1;
+                return b.score - a.score;
+            });
+
+            displayResults(sortedPortfolios.slice(0, 3), userInputs);
+        }
+
+        // Display results
+        function displayResults(portfolios, userInputs) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (portfolios.length === 0) {
+                resultsDiv.innerHTML = '<div class="warning-card"><h3>No portfolios found</h3></div>';
+                return;
+            }
+            
+            let html = '<h2>🎯 Top 3 Portfolio Recommendations</h2>';
+            
+            // Strategy preference summary
+            const strategyLabels = {
+                1: 'Maximum Dividend Focus', 2: 'High Dividend Focus', 3: 'Moderate Dividend Focus',
+                4: 'Slight Dividend Preference', 5: 'Balanced Approach', 6: 'Slight Growth Preference',
+                7: 'Moderate Growth Focus', 8: 'High Growth Focus', 9: 'Aggressive Growth Focus', 10: 'Maximum Growth Focus'
+            };
+            
+            html += `
+            <div class="comparison-highlight">
+                <strong>📊 Your Selected Strategy:</strong> ${strategyLabels[userInputs.strategyBias]} 
+                ${getStrategyBadge(userInputs.strategyBias)}
+                <br><strong>📉 Max Drawdown Tolerance:</strong> ${userInputs.maxDrawdown}%
+                <br><strong>💰 Starting Capital:</strong> $${userInputs.startingCapital.toLocaleString()}
+                <br><strong>📈 Monthly Contributions:</strong> $${userInputs.monthlyContribution.toLocaleString()}
+                <br><strong>⏰ Time Horizon:</strong> ${userInputs.timeHorizon} years
+                ${userInputs.targetIncome > 0 ? `<br><strong>🎯 Target Monthly Income:</strong> $${userInputs.targetIncome.toLocaleString()}` : ''}
+            </div>`;
+            
+            portfolios.forEach((portfolio, index) => {
+                const feasibilityClass = portfolio.criteria.overallFeasible ? 'feasible' : 'not-feasible';
+                const rankEmojis = ['🥇', '🥈', '🥉'];
+                
+                html += `
+                <div class="portfolio-card ${feasibilityClass}">
+                    <h3>
+                        ${portfolio.name} ${getStrategyBadge(portfolio.strategyBias)}
+                        <span class="rank-badge">${rankEmojis[index]}</span>
+                    </h3>
+                    
+                    <div class="metrics">
+                        <div class="metric">
+                            <div class="metric-value">$${portfolio.initialMonthlyDividend.toFixed(0)}</div>
+                            <div class="metric-label">Initial Monthly Dividends</div>
+                            <div class="status-indicator">${portfolio.initialMonthlyDividend >= userInputs.targetIncome ? '✅' : '❌'} Target: $${userInputs.targetIncome}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${(portfolio.maxDrawdown * 100).toFixed(0)}%</div>
+                            <div class="metric-label">Max Drawdown Risk</div>
+                            <div class="status-indicator">${portfolio.maxDrawdown <= (userInputs.maxDrawdown / 100) ? '✅' : '❌'} Limit: ${userInputs.maxDrawdown}%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${(portfolio.expectedReturn * 100).toFixed(1)}%</div>
+                            <div class="metric-label">Expected Annual Return</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${(portfolio.effectiveYield * 100).toFixed(2)}%</div>
+                            <div class="metric-label">Portfolio Dividend Yield</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${portfolio.score.toFixed(0)}</div>
+                            <div class="metric-label">Match Score (0-100)</div>
+                            <div class="status-indicator">${Math.abs(portfolio.strategyBias - userInputs.strategyBias) <= 1 ? '🎯 Perfect Match' : '✅ Good Match'}</div>
+                        </div>
+                    </div>
+                    
+                    ${portfolio.maxAllocation >= 60 ? `
+                    <div class="concentration-warning">
+                        ⚠️ <strong>High Concentration:</strong> ${portfolio.maxAllocation}% allocated to ${portfolio.maxAsset}. 
+                        This creates higher risk but potentially higher returns. Consider your risk tolerance carefully.
+                    </div>` : ''}
+                    
+                    <div class="projection-section">
+                        <h4>📊 ${userInputs.timeHorizon}-Year Performance Scenarios</h4>
+                        <div class="scenario-grid">
+                            <div class="scenario-item scenario-conservative">
+                                <div class="scenario-value">$${portfolio.scenarios.conservative.finalPortfolioValue.toLocaleString()}</div>
+                                <div><strong>Conservative Case</strong><br>(20% lower returns)</div>
+                                <div style="font-size: 0.9em; margin-top: 5px;">
+                                    Monthly Dividends: $${portfolio.scenarios.conservative.finalMonthlyDividends.toLocaleString()}
+                                </div>
+                            </div>
+                            <div class="scenario-item scenario-expected">
+                                <div class="scenario-value">$${portfolio.scenarios.expected.finalPortfolioValue.toLocaleString()}</div>
+                                <div><strong>Expected Case</strong><br>(Base scenario)</div>
+                                <div style="font-size: 0.9em; margin-top: 5px;">
+                                    Monthly Dividends: $${portfolio.scenarios.expected.finalMonthlyDividends.toLocaleString()}
+                                </div>
+                            </div>
+                            <div class="scenario-item scenario-optimistic">
+                                <div class="scenario-value">$${portfolio.scenarios.optimistic.finalPortfolioValue.toLocaleString()}</div>
+                                <div><strong>Optimistic Case</strong><br>(30% higher returns)</div>
+                                <div style="font-size: 0.9em; margin-top: 5px;">
+                                    Monthly Dividends: $${portfolio.scenarios.optimistic.finalMonthlyDividends.toLocaleString()}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 15px; text-align: center; font-size: 0.9em; color: #666;">
+                            <strong>Total Dividends Over ${userInputs.timeHorizon} Years:</strong> 
+                            $${portfolio.scenarios.expected.totalDividendsReceived.toLocaleString()} ${userInputs.reinvestDividends ? '(Reinvested)' : '(Cash)'}
+                        </div>
+                    </div>
+                    
+                    <h4>🥧 Asset Allocation</h4>
+                    <div class="allocation-grid">
+                        ${Object.entries(portfolio.allocations)
+                            .filter(([asset, pct]) => pct > 0)
+                            .sort(([,a], [,b]) => b - a)
+                            .map(([asset, pct]) => `
+                                <div class="allocation-item ${pct >= 60 ? 'high-allocation' : ''}">
+                                    <strong>${asset}</strong><br>
+                                    ${pct}% ${pct >= 60 ? '⚠️' : ''}<br>
+                                    $${(userInputs.startingCapital * pct / 100).toLocaleString()}<br>
+                                    <small style="color: #666;">${assets[asset].name}</small><br>
+                                    <small style="color: #999;">${assets[asset].type === 'growth' ? '🚀 Growth' : assets[asset].type === 'income' ? '💰 Income' : '⚖️ Hybrid'}</small>
+                                </div>
+                            `).join('')}
+                    </div>
+                    
+                    <div class="implementation-steps">
+                        <h4>🚀 Implementation Guide</h4>
+                        <p><strong>Purchase Order:</strong></p>
+                        <ol>
+                            ${Object.entries(portfolio.allocations)
+                                .filter(([asset, pct]) => pct > 0)
+                                .sort(([assetA, pctA], [assetB, pctB]) => {
+                                    if (userInputs.strategyBias <= 4) {
+                                        if (assets[assetA].type === 'income' && assets[assetB].type !== 'income') return -1;
+                                        if (assets[assetA].type !== 'income' && assets[assetB].type === 'income') return 1;
+                                    }
+                                    return pctB - pctA;
+                                })
+                                .map(([asset, pct]) => 
+                                    `<li><strong>Buy ${asset}</strong>: $${(userInputs.startingCapital * pct / 100).toLocaleString()} (${pct}%) - ${assets[asset].name} ${pct >= 60 ? '<em style="color: #ff6b6b;">(High concentration - consider phased entry)</em>' : ''}</li>`
+                                ).join('')}
+                            <li><strong>Set up automatic dividend reinvestment</strong> ${userInputs.reinvestDividends ? '✅' : '⚠️ Consider enabling'}</li>
+                            ${userInputs.monthlyContribution > 0 ? `<li><strong>Automate monthly contributions</strong> of $${userInputs.monthlyContribution.toLocaleString()}</li>` : ''}
+                            <li><strong>Quarterly rebalancing</strong> if any asset drifts >10% from target allocation</li>
+                            ${portfolio.maxAllocation >= 60 ? '<li><strong>Monitor concentration risk</strong> - consider taking profits if single position grows >70%</li>' : ''}
+                        </ol>
+                    </div>
+                </div>`;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // Initialize calculator
+        window.onload = function() {
+            // Initialize all sliders
+            updateSliderValue('capital');
+            updateSliderValue('drawdown');
+            updateSliderValue('income');
+            updateSliderValue('contribution');
+            updateSliderValue('time');
+            updateSliderValue('strategy');
+        };
+    </script>
+</body>
+</html>
